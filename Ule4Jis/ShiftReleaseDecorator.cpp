@@ -2,7 +2,7 @@
 #include "ShiftReleaseDecorator.h"
 #include "KeyEmulator.h"
 
-ShiftReleaseDecorator::ShiftReleaseDecorator(std::auto_ptr<Emulation> &emulation) : emulation(emulation) {
+ShiftReleaseDecorator::ShiftReleaseDecorator(std::unique_ptr<Emulation> emulation) : emulation(std::move(emulation)) {
 }
 
 ShiftReleaseDecorator::~ShiftReleaseDecorator() {

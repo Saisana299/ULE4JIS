@@ -1,4 +1,4 @@
-// Ule4Jis.cpp : �A�v���P�[�V�����̃N���X������`���܂��B
+﻿// Ule4Jis.cpp : アプリケーションのクラス動作を定義します。
 //
 
 #include "stdafx.h"
@@ -17,44 +17,44 @@ BEGIN_MESSAGE_MAP(Ule4JisApp, CWinApp)
 END_MESSAGE_MAP()
 
 
-// Ule4JisApp �R���X�g���N�V����
+// Ule4JisApp コンストラクション
 
 Ule4JisApp::Ule4JisApp()
 {
-	// TODO: ���̈ʒu�ɍ\�z�p�R�[�h��ǉ����Ă��������B
-	// ������ InitInstance ���̏d�v�ȏ��������������ׂċL�q���Ă��������B
+	// TODO: この位置に構築用コードを追加してください。
+	// ここに InitInstance 中の重要な初期化処理をすべて記述してください。
 }
 
 
-// �B��� Ule4JisApp �I�u�W�F�N�g�ł��B
+// 唯一の Ule4JisApp オブジェクトです。
 
 Ule4JisApp theApp;
 
 
-// Ule4JisApp ������
+// Ule4JisApp 初期化
 
 BOOL Ule4JisApp::InitInstance()
 {
-	// �A�v���P�[�V���� �}�j�t�F�X�g�� visual �X�^�C����L���ɂ��邽�߂ɁA
-	// ComCtl32.dll Version 6 �ȍ~�̎g�p���w�肷��ꍇ�́A
-	// Windows XP �� InitCommonControlsEx() ���K�v�ł��B�����Ȃ���΁A�E�B���h�E�쐬�͂��ׂĎ��s���܂��B
+	// アプリケーション マニフェストが visual スタイルを有効にするために、
+	// ComCtl32.dll Version 6 以降の使用を指定する場合は、
+	// Windows XP に InitCommonControlsEx() が必要です。さもなければ、ウィンドウ作成はすべて失敗します。
 	INITCOMMONCONTROLSEX InitCtrls;
 	InitCtrls.dwSize = sizeof(InitCtrls);
-	// �A�v���P�[�V�����Ŏg�p���邷�ׂẴR���� �R���g���[�� �N���X���܂߂�ɂ́A
-	// �����ݒ肵�܂��B
+	// アプリケーションで使用するすべてのコモン コントロール クラスを含めるには、
+	// これを設定します。
 	InitCtrls.dwICC = ICC_WIN95_CLASSES;
 	InitCommonControlsEx(&InitCtrls);
 
 	CWinApp::InitInstance();
 
-	// �W��������
-	// �����̋@�\���g�킸�ɍŏI�I�Ȏ��s�\�t�@�C����
-	// �T�C�Y���k���������ꍇ�́A�ȉ�����s�v�ȏ�����
-	// ���[�`�����폜���Ă��������B
-	// �ݒ肪�i�[����Ă��郌�W�X�g�� �L�[��ύX���܂��B
-	// TODO: ��Ж��܂��͑g�D���Ȃǂ̓K�؂ȕ������
-	// ���̕������ύX���Ă��������B
-//	SetRegistryKey(_T("�A�v���P�[�V���� �E�B�U�[�h�Ő������ꂽ���[�J�� �A�v���P�[�V����"));
+	// 標準初期化
+	// これらの機能を使わずに最終的な実行可能ファイルの
+	// サイズを縮小したい場合は、以下から不要な初期化
+	// ルーチンを削除してください。
+	// 設定が格納されているレジストリ キーを変更します。
+	// TODO: 会社名または組織名などの適切な文字列に
+	// この文字列を変更してください。
+//	SetRegistryKey(_T("アプリケーション ウィザードで生成されたローカル アプリケーション"));
 
 	// prevent multiple boot
 	::CreateMutex(NULL, TRUE, m_pszExeName);
@@ -65,21 +65,33 @@ BOOL Ule4JisApp::InitInstance()
 		return FALSE;
 	}
 
-	Ule4JisDlg dlg;
-	m_pMainWnd = &dlg;
-	INT_PTR nResponse = dlg.DoModal();
-	if (nResponse == IDOK)
-	{
-		// TODO: �_�C�A���O�� <OK> �ŏ����ꂽ���̃R�[�h��
-		//  �L�q���Ă��������B
-	}
-	else if (nResponse == IDCANCEL)
-	{
-		// TODO: �_�C�A���O�� <�L�����Z��> �ŏ����ꂽ���̃R�[�h��
-		//  �L�q���Ă��������B
-	}
+	bool startupMode = (_tcsstr(m_lpCmdLine, _T("/startup")) != NULL);
 
-	// �_�C�A���O�͕����܂����B�A�v���P�[�V�����̃��b�Z�[�W �|���v���J�n���Ȃ���
-	//  �A�v���P�[�V�������I�����邽�߂� FALSE ��Ԃ��Ă��������B
-	return FALSE;
+	if (startupMode) {
+		// 自動起動時はダイアログを隠してバックグラウンドで動作
+		Ule4JisDlg* dlg = new Ule4JisDlg(true);
+		m_pMainWnd = dlg;
+		dlg->Create(Ule4JisDlg::IDD);
+		dlg->ShowWindow(SW_HIDE);
+		return TRUE;
+	} else {
+		// 手動起動時はダイアログを表示
+		Ule4JisDlg dlg(false);
+		m_pMainWnd = &dlg;
+		INT_PTR nResponse = dlg.DoModal();
+		if (nResponse == IDOK)
+		{
+			// TODO: ダイアログが <OK> で消された時のコードを
+			//  記述してください。
+		}
+		else if (nResponse == IDCANCEL)
+		{
+			// TODO: ダイアログが <キャンセル> で消された時のコードを
+			//  記述してください。
+		}
+
+		// ダイアログは閉じられました。アプリケーションのメッセージ ポンプを開始しないで
+		//  アプリケーションを終了するために FALSE を返してください。
+		return FALSE;
+	}
 }

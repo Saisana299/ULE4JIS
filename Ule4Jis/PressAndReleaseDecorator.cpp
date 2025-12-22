@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "PressAndReleaseDecorator.h"
 
-PressAndReleaseDecorator::PressAndReleaseDecorator(std::auto_ptr<Emulation> &emulation) : emulation(emulation) {
+PressAndReleaseDecorator::PressAndReleaseDecorator(std::unique_ptr<Emulation> emulation) : emulation(std::move(emulation)) {
 }
 
 PressAndReleaseDecorator::~PressAndReleaseDecorator() {

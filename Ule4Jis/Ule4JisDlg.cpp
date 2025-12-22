@@ -1,4 +1,4 @@
-// Ule4JisDlg.cpp : À‘•ƒtƒ@ƒCƒ‹
+ï»¿// Ule4JisDlg.cpp : å®Ÿè£…ãƒ•ã‚¡ã‚¤ãƒ«
 //
 
 #include "stdafx.h"
@@ -8,26 +8,33 @@
 #include "USonJISStrategy.h"
 #include "Constants.h"
 #include "afxwin.h"
+#include <winreg.h>
+
+#pragma warning(disable: 4311 4302)  // Suppress cast warnings
+
+// Helper functions
+static bool IsStartupEnabled();
+static void SetStartup(bool enable);
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 
-// ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚Ìƒo[ƒWƒ‡ƒ“î•ñ‚Ég‚í‚ê‚é CAboutDlg ƒ_ƒCƒAƒƒO
+// ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã®ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±ã«ä½¿ã‚ã‚Œã‚‹ CAboutDlg ãƒ€ã‚¤ã‚¢ãƒ­ã‚°
 
 class CAboutDlg : public CDialog
 {
 public:
 	CAboutDlg();
 
-// ƒ_ƒCƒAƒƒO ƒf[ƒ^
+// ãƒ€ã‚¤ã‚¢ãƒ­ã‚° ãƒ‡ãƒ¼ã‚¿
 	enum { IDD = IDD_ABOUTBOX };
 
 	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV ƒTƒ|[ƒg
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV ã‚µãƒãƒ¼ãƒˆ
 
-// À‘•
+// å®Ÿè£…
 protected:
 	DECLARE_MESSAGE_MAP()
 public:
@@ -58,20 +65,25 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-// Ule4JisDlg ƒ_ƒCƒAƒƒO
+// Ule4JisDlg ãƒ€ã‚¤ã‚¢ãƒ­ã‚°
 
 
 
 
-Ule4JisDlg::Ule4JisDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(Ule4JisDlg::IDD, pParent)
+Ule4JisDlg::Ule4JisDlg(bool startupMode, CWnd* pParent /*=NULL*/)
+	: CDialog(Ule4JisDlg::IDD, pParent), startupMode(startupMode)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+}
+
+Ule4JisDlg::~Ule4JisDlg()
+{
 }
 
 void Ule4JisDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_STARTUP, startupCheck);
 }
 
 BEGIN_MESSAGE_MAP(Ule4JisDlg, CDialog)
@@ -81,18 +93,20 @@ BEGIN_MESSAGE_MAP(Ule4JisDlg, CDialog)
 	//}}AFX_MSG_MAP
 	ON_WM_SIZE()
 	ON_BN_CLICKED(IDC_HIDE, &Ule4JisDlg::OnBnClickedHide)
+	ON_BN_CLICKED(IDC_STARTUP, &Ule4JisDlg::OnBnClickedStartup)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
-// Ule4JisDlg ƒƒbƒZ[ƒW ƒnƒ“ƒhƒ‰
+// Ule4JisDlg ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒãƒ³ãƒ‰ãƒ©
 
 BOOL Ule4JisDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// "ƒo[ƒWƒ‡ƒ“î•ñ..." ƒƒjƒ…[‚ğƒVƒXƒeƒ€ ƒƒjƒ…[‚É’Ç‰Á‚µ‚Ü‚·B
+	// "ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±..." ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‚’ã‚·ã‚¹ãƒ†ãƒ  ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã«è¿½åŠ ã—ã¾ã™ã€‚
 
-	// IDM_ABOUTBOX ‚ÍAƒVƒXƒeƒ€ ƒRƒ}ƒ“ƒh‚Ì”ÍˆÍ“à‚É‚È‚¯‚ê‚Î‚È‚è‚Ü‚¹‚ñB
+	// IDM_ABOUTBOX ã¯ã€ã‚·ã‚¹ãƒ†ãƒ  ã‚³ãƒãƒ³ãƒ‰ã®ç¯„å›²å†…ã«ãªã‘ã‚Œã°ãªã‚Šã¾ã›ã‚“ã€‚
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
@@ -108,12 +122,12 @@ BOOL Ule4JisDlg::OnInitDialog()
 		}
 	}
 
-	// ‚±‚Ìƒ_ƒCƒAƒƒO‚ÌƒAƒCƒRƒ“‚ğİ’è‚µ‚Ü‚·BƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ÌƒƒCƒ“ ƒEƒBƒ“ƒhƒE‚ªƒ_ƒCƒAƒƒO‚Å‚È‚¢ê‡A
-	//  Framework ‚ÍA‚±‚Ìİ’è‚ğ©“®“I‚És‚¢‚Ü‚·B
-	SetIcon(m_hIcon, TRUE);			// ‘å‚«‚¢ƒAƒCƒRƒ“‚Ìİ’è
-	SetIcon(m_hIcon, FALSE);		// ¬‚³‚¢ƒAƒCƒRƒ“‚Ìİ’è
+	// ã“ã®ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®ã‚¢ã‚¤ã‚³ãƒ³ã‚’è¨­å®šã—ã¾ã™ã€‚ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã®ãƒ¡ã‚¤ãƒ³ ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãŒãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã§ãªã„å ´åˆã€
+	//  Framework ã¯ã€ã“ã®è¨­å®šã‚’è‡ªå‹•çš„ã«è¡Œã„ã¾ã™ã€‚
+	SetIcon(m_hIcon, TRUE);			// å¤§ãã„ã‚¢ã‚¤ã‚³ãƒ³ã®è¨­å®š
+	SetIcon(m_hIcon, FALSE);		// å°ã•ã„ã‚¢ã‚¤ã‚³ãƒ³ã®è¨­å®š
 
-	// TODO: ‰Šú‰»‚ğ‚±‚±‚É’Ç‰Á‚µ‚Ü‚·B
+	// TODO: åˆæœŸåŒ–ã‚’ã“ã“ã«è¿½åŠ ã—ã¾ã™ã€‚
 
 	// add icon into task tray
 	NOTIFYICONDATA &nid = this->notifyIconData;
@@ -142,7 +156,14 @@ BOOL Ule4JisDlg::OnInitDialog()
 	// save current strategy type
 	this->currentStrategy = USonJIS;
 
-	return TRUE;  // ƒtƒH[ƒJƒX‚ğƒRƒ“ƒgƒ[ƒ‹‚Éİ’è‚µ‚½ê‡‚ğœ‚«ATRUE ‚ğ•Ô‚µ‚Ü‚·B
+	// set startup checkbox
+	this->startupCheck.SetCheck(IsStartupEnabled());
+
+	if (startupMode || IsStartupEnabled()) {
+		ShowWindow(SW_HIDE);
+	}
+
+	return TRUE;  // ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã‚’ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã«è¨­å®šã—ãŸå ´åˆã‚’é™¤ãã€TRUE ã‚’è¿”ã—ã¾ã™ã€‚
 }
 
 void Ule4JisDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -158,19 +179,19 @@ void Ule4JisDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	}
 }
 
-// ƒ_ƒCƒAƒƒO‚ÉÅ¬‰»ƒ{ƒ^ƒ“‚ğ’Ç‰Á‚·‚éê‡AƒAƒCƒRƒ“‚ğ•`‰æ‚·‚é‚½‚ß‚Ì
-//  ‰º‚ÌƒR[ƒh‚ª•K—v‚Å‚·BƒhƒLƒ…ƒƒ“ƒg/ƒrƒ…[ ƒ‚ƒfƒ‹‚ğg‚¤ MFC ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚Ìê‡A
-//  ‚±‚ê‚ÍAFramework ‚É‚æ‚Á‚Ä©“®“I‚Éİ’è‚³‚ê‚Ü‚·B
+// ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã«æœ€å°åŒ–ãƒœã‚¿ãƒ³ã‚’è¿½åŠ ã™ã‚‹å ´åˆã€ã‚¢ã‚¤ã‚³ãƒ³ã‚’æç”»ã™ã‚‹ãŸã‚ã®
+//  ä¸‹ã®ã‚³ãƒ¼ãƒ‰ãŒå¿…è¦ã§ã™ã€‚ãƒ‰ã‚­ãƒ¥ãƒ¡ãƒ³ãƒˆ/ãƒ“ãƒ¥ãƒ¼ ãƒ¢ãƒ‡ãƒ«ã‚’ä½¿ã† MFC ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã®å ´åˆã€
+//  ã“ã‚Œã¯ã€Framework ã«ã‚ˆã£ã¦è‡ªå‹•çš„ã«è¨­å®šã•ã‚Œã¾ã™ã€‚
 
 void Ule4JisDlg::OnPaint()
 {
 	if (IsIconic())
 	{
-		CPaintDC dc(this); // •`‰æ‚ÌƒfƒoƒCƒX ƒRƒ“ƒeƒLƒXƒg
+		CPaintDC dc(this); // æç”»ã®ãƒ‡ãƒã‚¤ã‚¹ ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆ
 
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
 
-		// ƒNƒ‰ƒCƒAƒ“ƒg‚ÌlŠpŒ`—Ìˆæ“à‚Ì’†‰›
+		// ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã®å››è§’å½¢é ˜åŸŸå†…ã®ä¸­å¤®
 		int cxIcon = GetSystemMetrics(SM_CXICON);
 		int cyIcon = GetSystemMetrics(SM_CYICON);
 		CRect rect;
@@ -178,7 +199,7 @@ void Ule4JisDlg::OnPaint()
 		int x = (rect.Width() - cxIcon + 1) / 2;
 		int y = (rect.Height() - cyIcon + 1) / 2;
 
-		// ƒAƒCƒRƒ“‚Ì•`‰æ
+		// ã‚¢ã‚¤ã‚³ãƒ³ã®æç”»
 		dc.DrawIcon(x, y, m_hIcon);
 	}
 	else
@@ -187,8 +208,8 @@ void Ule4JisDlg::OnPaint()
 	}
 }
 
-// ƒ†[ƒU[‚ªÅ¬‰»‚µ‚½ƒEƒBƒ“ƒhƒE‚ğƒhƒ‰ƒbƒO‚µ‚Ä‚¢‚é‚Æ‚«‚É•\¦‚·‚éƒJ[ƒ\ƒ‹‚ğæ“¾‚·‚é‚½‚ß‚ÉA
-//  ƒVƒXƒeƒ€‚ª‚±‚ÌŠÖ”‚ğŒÄ‚Ño‚µ‚Ü‚·B
+// ãƒ¦ãƒ¼ã‚¶ãƒ¼ãŒæœ€å°åŒ–ã—ãŸã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ãƒ‰ãƒ©ãƒƒã‚°ã—ã¦ã„ã‚‹ã¨ãã«è¡¨ç¤ºã™ã‚‹ã‚«ãƒ¼ã‚½ãƒ«ã‚’å–å¾—ã™ã‚‹ãŸã‚ã«ã€
+//  ã‚·ã‚¹ãƒ†ãƒ ãŒã“ã®é–¢æ•°ã‚’å‘¼ã³å‡ºã—ã¾ã™ã€‚
 HCURSOR Ule4JisDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
@@ -239,12 +260,28 @@ LRESULT Ule4JisDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 		case ID_TASKTRAY_EXIT:
 			::PostQuitMessage(0);
 			break;
+
+		// https://github.com/kimi-soft/forked-ule4jis/commit/1c52200d2f721c87ef7aa4232681894a4da16f03
+		case WM_WINDOWPOSCHANGING:
+			onWindowPosChanging((WINDOWPOS*)lParam);
+			break;
+
 		default:
 			break;
 		}
 	}
 
 	return CDialog::WindowProc(message, wParam, lParam);
+}
+
+// https://github.com/kimi-soft/forked-ule4jis/commit/1c52200d2f721c87ef7aa4232681894a4da16f03
+void Ule4JisDlg::onWindowPosChanging(WINDOWPOS* lpwndpos) {
+	CDialog::OnWindowPosChanging(lpwndpos);
+
+	// Hidden launch dialog
+	if (lpwndpos != NULL) {
+		lpwndpos->flags &= ~SWP_SHOWWINDOW;
+	}
 }
 
 void Ule4JisDlg::changeTaskTrayIconToUS() {
@@ -265,7 +302,7 @@ void Ule4JisDlg::showTaskTrayPopupMenu() {
 	menu.LoadMenu(IDR_MENU_TASKTRAY);
 
 	CMenu *subMenu = menu.GetSubMenu(0);
-	
+
 	// set menu state
 	if (this->keyEmulator->isStarted()) {
 		subMenu->EnableMenuItem(ID_TASKTRAY_START, MF_GRAYED);
@@ -285,7 +322,7 @@ void Ule4JisDlg::OnSize(UINT nType, int cx, int cy)
 {
 	CDialog::OnSize(nType, cx, cy);
 
-	// TODO: ‚±‚±‚ÉƒƒbƒZ[ƒW ƒnƒ“ƒhƒ‰ ƒR[ƒh‚ğ’Ç‰Á‚µ‚Ü‚·B
+	// TODO: ã“ã“ã«ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒãƒ³ãƒ‰ãƒ© ã‚³ãƒ¼ãƒ‰ã‚’è¿½åŠ ã—ã¾ã™ã€‚
 	if (nType == SIZE_MINIMIZED) {
 		ShowWindow(SW_HIDE);
 	}
@@ -293,7 +330,7 @@ void Ule4JisDlg::OnSize(UINT nType, int cx, int cy)
 
 void Ule4JisDlg::OnBnClickedHide()
 {
-	// TODO: ‚±‚±‚ÉƒRƒ“ƒgƒ[ƒ‹’Ê’mƒnƒ“ƒhƒ‰ ƒR[ƒh‚ğ’Ç‰Á‚µ‚Ü‚·B
+	// TODO: ã“ã“ã«ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«é€šçŸ¥ãƒãƒ³ãƒ‰ãƒ© ã‚³ãƒ¼ãƒ‰ã‚’è¿½åŠ ã—ã¾ã™ã€‚
 	ShowWindow(SW_MINIMIZE);
 }
 
@@ -301,9 +338,9 @@ HBRUSH CAboutDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
 	HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
 
-	// TODO:  ‚±‚±‚Å DC ‚Ì‘®«‚ğ•ÏX‚µ‚Ä‚­‚¾‚³‚¢B
+	// TODO:  ã“ã“ã§ DC ã®å±æ€§ã‚’å¤‰æ›´ã—ã¦ãã ã•ã„ã€‚
 
-	// TODO:  Šù’è’l‚ğg—p‚µ‚½‚­‚È‚¢ê‡‚Í•Ê‚Ìƒuƒ‰ƒV‚ğ•Ô‚µ‚Ü‚·B
+	// TODO:  æ—¢å®šå€¤ã‚’ä½¿ç”¨ã—ãŸããªã„å ´åˆã¯åˆ¥ã®ãƒ–ãƒ©ã‚·ã‚’è¿”ã—ã¾ã™ã€‚
 
 	// set color 'blue' to draw URL text.
 	if (pWnd == &this->urlLabel) {
@@ -318,7 +355,7 @@ BOOL CAboutDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 	if (LOWORD(wParam) == IDC_ABOUT_URL) {
 		if (HIWORD(wParam) == STN_CLICKED) {
 			HINSTANCE result = ::ShellExecute(NULL, _T("open"), DEZZ_NETWORKS_URL, NULL, NULL, SW_SHOWNORMAL);
-			if ((LONG)result <= 32) {
+			if (reinterpret_cast<INT_PTR>(result) <= 32) {
 				// error. but since this is not critical problem, i ignore this :P
 			}
 		}
@@ -342,11 +379,63 @@ BOOL CAboutDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  ‚±‚±‚É‰Šú‰»‚ğ’Ç‰Á‚µ‚Ä‚­‚¾‚³‚¢
+	// TODO:  ã“ã“ã«åˆæœŸåŒ–ã‚’è¿½åŠ ã—ã¦ãã ã•ã„
 
 	// get hand cursor handle
 	this->handCursor = ::LoadCursor(NULL, MAKEINTRESOURCE(IDC_HAND));
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// —áŠO : OCX ƒvƒƒpƒeƒB ƒy[ƒW‚Í•K‚¸ FALSE ‚ğ•Ô‚µ‚Ü‚·B
+	// ä¾‹å¤– : OCX ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ ãƒšãƒ¼ã‚¸ã¯å¿…ãš FALSE ã‚’è¿”ã—ã¾ã™ã€‚
+}
+
+void Ule4JisDlg::OnBnClickedStartup()
+{
+	SetStartup(this->startupCheck.GetCheck() == BST_CHECKED);
+}
+
+// Helper functions
+bool IsStartupEnabled()
+{
+	HKEY hKey;
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+		DWORD type, size;
+		if (RegQueryValueEx(hKey, _T("Ule4Jis"), NULL, &type, NULL, &size) == ERROR_SUCCESS) {
+			RegCloseKey(hKey);
+			return true;
+		}
+		RegCloseKey(hKey);
+	}
+	return false;
+}
+
+void SetStartup(bool enable)
+{
+	HKEY hKey;
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"), 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
+		if (enable) {
+			TCHAR path[MAX_PATH];
+			GetModuleFileName(NULL, path, MAX_PATH);
+			_tcscat_s(path, _T(" /startup"));
+			RegSetValueEx(hKey, _T("Ule4Jis"), 0, REG_SZ, (BYTE*)path, static_cast<DWORD>((_tcslen(path) + 1) * sizeof(TCHAR)));
+		} else {
+			RegDeleteValue(hKey, _T("Ule4Jis"));
+		}
+		RegCloseKey(hKey);
+	}
+}
+
+void Ule4JisDlg::OnDestroy()
+{
+	// ã‚¿ã‚¹ã‚¯ãƒˆãƒ¬ã‚¤ã‚¢ã‚¤ã‚³ãƒ³ã‚’å‰Šé™¤
+	Shell_NotifyIcon(NIM_DELETE, &notifyIconData);
+
+	// ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ãƒ•ãƒƒã‚¯ã‚’åœæ­¢
+	if (keyEmulator) {
+		keyEmulator->end();
+	}
+
+	// ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã‚’çµ‚äº†
+	PostQuitMessage(0);
+
+	CDialog::OnDestroy();
 }

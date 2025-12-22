@@ -13,6 +13,7 @@
 #define IDR_ICON_JIS                    130
 #define IDC_HIDE                        1000
 #define IDC_ABOUT_URL                   1001
+#define IDC_STARTUP                     1002
 #define ID_DUMMY_AIUEO                  32771
 #define ID_DUMMY_KAKIKUKEKO             32772
 #define ID_DUMMY_STRATEGY               32773

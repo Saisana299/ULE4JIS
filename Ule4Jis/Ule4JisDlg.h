@@ -1,25 +1,28 @@
-// Ule4JisDlg.h : ƒwƒbƒ_[ ƒtƒ@ƒCƒ‹
+ï»¿// Ule4JisDlg.h : ãƒ˜ãƒƒãƒ€ãƒ¼ ãƒ•ã‚¡ã‚¤ãƒ«
 //
 
 #pragma once
 
 #include "KeyEmulator.h"
+#include <memory>
 
-// Ule4JisDlg ƒ_ƒCƒAƒƒO
+// Ule4JisDlg ãƒ€ã‚¤ã‚¢ãƒ­ã‚°
 class Ule4JisDlg : public CDialog
 {
-// ƒRƒ“ƒXƒgƒ‰ƒNƒVƒ‡ƒ“
+// ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚·ãƒ§ãƒ³
 public:
-	Ule4JisDlg(CWnd* pParent = NULL);	// •W€ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+	Ule4JisDlg(bool startupMode = false, CWnd* pParent = NULL);	// æ¨™æº–ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+	virtual ~Ule4JisDlg();
 
-// ƒ_ƒCƒAƒƒO ƒf[ƒ^
+// ãƒ€ã‚¤ã‚¢ãƒ­ã‚° ãƒ‡ãƒ¼ã‚¿
 	enum { IDD = IDD_ULE4JP_DIALOG };
 
 	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV ƒTƒ|[ƒg
+	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV ã‚µãƒãƒ¼ãƒˆ
 
 private:
 	// added
+	bool startupMode;
 	enum Strategy { USonJIS, JISonUS };
 	NOTIFYICONDATA notifyIconData;
 	Strategy currentStrategy;
@@ -28,18 +31,24 @@ private:
 	void changeTaskTrayIconToUS();
 	void changeTaskTrayIconToJIS();
 
-// À‘•
+	// https://github.com/kimi-soft/forked-ule4jis/commit/1c52200d2f721c87ef7aa4232681894a4da16f03
+	void onWindowPosChanging(WINDOWPOS* lpwndpos);
+
+// å®Ÿè£…
 protected:
 	HICON m_hIcon;
-	std::auto_ptr<KeyEmulator> keyEmulator;
+	std::unique_ptr<KeyEmulator> keyEmulator;
+	CButton startupCheck;
 
-	// ¶¬‚³‚ê‚½AƒƒbƒZ[ƒWŠ„‚è“–‚ÄŠÖ”
+	// ç”Ÿæˆã•ã‚ŒãŸã€ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸å‰²ã‚Šå½“ã¦é–¢æ•°
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
+	afx_msg void OnBnClickedStartup();
+	afx_msg void OnDestroy();
 	virtual BOOL DestroyWindow();
 protected:
 	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam);

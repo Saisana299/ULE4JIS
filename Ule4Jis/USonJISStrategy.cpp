@@ -15,14 +15,14 @@ void USonJISStrategy::getEmulationMap(EmulationMapType *dest) {
 	dest->insert(
 		KeyCondition('2', true),
 		new ShiftReleaseDecorator(
-			std::auto_ptr<Emulation>(new NormalKeyEmulation(VK_OEM_3))
+			std::unique_ptr<Emulation>(new NormalKeyEmulation(VK_OEM_3))
 		)
 	);
 	// ^
 	dest->insert(
 		KeyCondition('6', true),
 		new ShiftReleaseDecorator(
-			std::auto_ptr<Emulation>(new NormalKeyEmulation(VK_OEM_7))
+			std::unique_ptr<Emulation>(new NormalKeyEmulation(VK_OEM_7))
 		)
 	);
 	// &
@@ -39,7 +39,7 @@ void USonJISStrategy::getEmulationMap(EmulationMapType *dest) {
 	dest->insert(
 		KeyCondition(VK_OEM_7),
 		new ShiftPressDecorator(
-			std::auto_ptr<Emulation>(new NormalKeyEmulation(VK_OEM_MINUS))
+			std::unique_ptr<Emulation>(new NormalKeyEmulation(VK_OEM_MINUS))
 		)
 	);
 	// +
@@ -50,8 +50,8 @@ void USonJISStrategy::getEmulationMap(EmulationMapType *dest) {
 	dest->insert(
 		KeyCondition(VK_OEM_ENLW),
 		new PressAndReleaseDecorator(
-			std::auto_ptr<Emulation>(new ShiftPressDecorator(
-					std::auto_ptr<Emulation>(new NormalKeyEmulation(VK_OEM_3))
+			std::unique_ptr<Emulation>(new ShiftPressDecorator(
+					std::unique_ptr<Emulation>(new NormalKeyEmulation(VK_OEM_3))
 				)
 			)
 		)
@@ -61,7 +61,7 @@ void USonJISStrategy::getEmulationMap(EmulationMapType *dest) {
 	dest->insert(
 		KeyCondition(VK_OEM_ENLW, true),
 		new PressAndReleaseDecorator(
-			std::auto_ptr<Emulation>(new NormalKeyEmulation(VK_OEM_7))
+			std::unique_ptr<Emulation>(new NormalKeyEmulation(VK_OEM_7))
 		)
 	);
 
@@ -76,10 +76,10 @@ void USonJISStrategy::getEmulationMap(EmulationMapType *dest) {
 	dest->insert(KeyCondition(VK_OEM_4, true), new NormalKeyEmulation(VK_OEM_6));
 	// :
 	dest->insert(KeyCondition(VK_OEM_PLUS, true),
-		new ShiftReleaseDecorator(std::auto_ptr<Emulation>(new NormalKeyEmulation(VK_OEM_1))));
+		new ShiftReleaseDecorator(std::unique_ptr<Emulation>(new NormalKeyEmulation(VK_OEM_1))));
 	// '
 	dest->insert(KeyCondition(VK_OEM_1),
-		new ShiftPressDecorator(std::auto_ptr<Emulation>(new NormalKeyEmulation('7'))));
+		new ShiftPressDecorator(std::unique_ptr<Emulation>(new NormalKeyEmulation('7'))));
 	// "
 	dest->insert(KeyCondition(VK_OEM_1, true), new NormalKeyEmulation('2'));
 	// '\'

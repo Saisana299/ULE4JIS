@@ -4,11 +4,12 @@
 #include "KeyHooker.h"
 #include "KeyHookEventListener.h"
 #include "KeyCondition.h"
+#include <memory>
 
 class KeyEmulator : public KeyHookEventListener {
 private:
 	EmulationMapType emulationMap;
-	std::auto_ptr<KeyHooker> hooker;
+	std::unique_ptr<KeyHooker> hooker;
 	KeyCondition keyCondition;
 
 private:
@@ -22,7 +23,7 @@ public:
 	void start();
 	void end();
 	virtual bool onKeyHookEvent(const KeyHookEventArgs &args);
-	bool isStarted() const { return (this->hooker.get() != NULL); }
+	bool isStarted() const { return (this->hooker != nullptr); }
 
 	void emulateKey(BYTE vkey, bool up = false) const;
 };

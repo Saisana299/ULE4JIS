@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "ShiftPressDecorator.h"
 
-ShiftPressDecorator::ShiftPressDecorator(std::auto_ptr<Emulation> &emulation) : emulation(emulation) {
+ShiftPressDecorator::ShiftPressDecorator(std::unique_ptr<Emulation> emulation) : emulation(std::move(emulation)) {
 }
 
 ShiftPressDecorator::~ShiftPressDecorator() {
