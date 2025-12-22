@@ -54,7 +54,7 @@ BOOL Ule4JisApp::InitInstance()
 	// 設定が格納されているレジストリ キーを変更します。
 	// TODO: 会社名または組織名などの適切な文字列に
 	// この文字列を変更してください。
-//	SetRegistryKey(_T("アプリケーション ウィザードで生成されたローカル アプリケーション"));
+	SetRegistryKey(_T("Ule4Jis"));
 
 	// prevent multiple boot
 	::CreateMutex(NULL, TRUE, m_pszExeName);

@@ -151,7 +151,16 @@ BOOL Ule4JisDlg::OnInitDialog()
 	// initialize emulator
 	USonJISStrategy strategy;
 	this->keyEmulator.reset(new KeyEmulator(&strategy));
-	this->keyEmulator->start();
+
+	// load emulation state from registry
+	bool emulationStarted = AfxGetApp()->GetProfileInt(_T("Settings"), _T("EmulationStarted"), 1) != 0;
+	if (emulationStarted) {
+		this->keyEmulator->start();
+		changeTaskTrayIconToUS();
+	} else {
+		this->keyEmulator->end();
+		changeTaskTrayIconToJIS();
+	}
 
 	// save current strategy type
 	this->currentStrategy = USonJIS;
@@ -248,10 +257,12 @@ LRESULT Ule4JisDlg::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 		case ID_TASKTRAY_START:
 			this->keyEmulator->start();
 			changeTaskTrayIconToUS();
+			AfxGetApp()->WriteProfileInt(_T("Settings"), _T("EmulationStarted"), 1);
 			break;
 		case ID_TASKTRAY_STOP:
 			this->keyEmulator->end();
 			changeTaskTrayIconToJIS();
+			AfxGetApp()->WriteProfileInt(_T("Settings"), _T("EmulationStarted"), 0);
 			break;
 		case ID_TASKTRAY_RESTART:
 			this->keyEmulator->end();
@@ -315,7 +326,10 @@ void Ule4JisDlg::showTaskTrayPopupMenu() {
 	//} else {
 	//	subMenu->GetSubMenu(0)->EnableMenuItem(ID_STRATEGY_JISONUS, MF_GRAYED);
 	//}
+
+	SetForegroundWindow();
 	subMenu->TrackPopupMenu(TPM_BOTTOMALIGN | TPM_RIGHTALIGN, point.x, point.y, this);
+	PostMessage(WM_NULL);
 }
 
 void Ule4JisDlg::OnSize(UINT nType, int cx, int cy)
