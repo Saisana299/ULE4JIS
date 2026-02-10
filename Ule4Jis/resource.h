@@ -14,6 +14,7 @@
 #define IDC_HIDE                        1000
 #define IDC_ABOUT_URL                   1001
 #define IDC_STARTUP                     1002
+#define IDC_RUN_AS_ADMIN                1003
 #define ID_DUMMY_AIUEO                  32771
 #define ID_DUMMY_KAKIKUKEKO             32772
 #define ID_DUMMY_STRATEGY               32773
@@ -35,7 +36,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         32785
-#define _APS_NEXT_CONTROL_VALUE         1002
+#define _APS_NEXT_CONTROL_VALUE         1004
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

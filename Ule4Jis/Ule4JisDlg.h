@@ -39,6 +39,7 @@ protected:
 	HICON m_hIcon;
 	std::unique_ptr<KeyEmulator> keyEmulator;
 	CButton startupCheck;
+	CButton runAsAdminCheck;
 
 	// 生成された、メッセージ割り当て関数
 	virtual BOOL OnInitDialog();
@@ -48,6 +49,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedStartup();
+	afx_msg void OnBnClickedRunAsAdmin();
 	afx_msg void OnDestroy();
 	virtual BOOL DestroyWindow();
 protected:

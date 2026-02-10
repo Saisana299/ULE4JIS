@@ -24,6 +24,11 @@ public:
 	virtual BOOL InitInstance();
 
 // 実装
+private:
+	HANDLE m_hMutex;
+
+public:
+	void ReleaseMutex();
 
 	DECLARE_MESSAGE_MAP()
 };

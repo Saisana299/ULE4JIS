@@ -9,6 +9,11 @@
 #define new DEBUG_NEW
 #endif
 
+// 前方宣言
+static bool IsRunAsAdministrator();
+static bool RestartAsAdministrator();
+static bool IsRunAsAdminEnabled();
+
 
 // Ule4JisApp
 
@@ -19,7 +24,7 @@ END_MESSAGE_MAP()
 
 // Ule4JisApp コンストラクション
 
-Ule4JisApp::Ule4JisApp()
+Ule4JisApp::Ule4JisApp() : m_hMutex(NULL)
 {
 	// TODO: この位置に構築用コードを追加してください。
 	// ここに InitInstance 中の重要な初期化処理をすべて記述してください。
@@ -57,12 +62,25 @@ BOOL Ule4JisApp::InitInstance()
 	SetRegistryKey(_T("Ule4Jis"));
 
 	// prevent multiple boot
-	::CreateMutex(NULL, TRUE, m_pszExeName);
+	m_hMutex = ::CreateMutex(NULL, TRUE, m_pszExeName);
 	if (::GetLastError() == ERROR_ALREADY_EXISTS) {
 		CString msg;
 		msg.LoadString(IDS_MSG_MULTIPLE_BOOT_ERROR);
 		::MessageBox(NULL, msg, NULL, MB_OK | MB_ICONEXCLAMATION);
 		return FALSE;
+	}
+
+	// 管理者として実行が必要な場合、自動的に再起動
+	if (IsRunAsAdminEnabled() && !IsRunAsAdministrator()) {
+		// /startupフラグがある場合は再起動しない（無限ループを防ぐ）
+		if (_tcsstr(m_lpCmdLine, _T("/startup")) == NULL) {
+			// Mutexを解放してから再起動
+			ReleaseMutex();
+			
+			if (RestartAsAdministrator()) {
+				return FALSE;
+			}
+		}
 	}
 
 	bool startupMode = (_tcsstr(m_lpCmdLine, _T("/startup")) != NULL);
@@ -93,5 +111,60 @@ BOOL Ule4JisApp::InitInstance()
 		// ダイアログは閉じられました。アプリケーションのメッセージ ポンプを開始しないで
 		//  アプリケーションを終了するために FALSE を返してください。
 		return FALSE;
+	}
+}
+
+// ヘルパー関数の実装
+static bool IsRunAsAdministrator()
+{
+	BOOL isAdmin = FALSE;
+	PSID adminGroup = NULL;
+	SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
+
+	if (AllocateAndInitializeSid(&ntAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+		DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &adminGroup))
+	{
+		CheckTokenMembership(NULL, adminGroup, &isAdmin);
+		FreeSid(adminGroup);
+	}
+
+	return isAdmin != FALSE;
+}
+
+static bool RestartAsAdministrator()
+{
+	TCHAR path[MAX_PATH];
+	GetModuleFileName(NULL, path, MAX_PATH);
+
+	// コマンドライン引数を取得
+	LPCTSTR cmdLine = GetCommandLine();
+	LPCTSTR args = _tcschr(cmdLine, _T(' '));
+	if (args == NULL) {
+		args = _T("");
+	}
+
+	SHELLEXECUTEINFO sei = { sizeof(sei) };
+	sei.lpVerb = _T("runas");
+	sei.lpFile = path;
+	sei.lpParameters = args;
+	sei.nShow = SW_NORMAL;
+
+	if (ShellExecuteEx(&sei)) {
+		return true;
+	}
+	return false;
+}
+
+static bool IsRunAsAdminEnabled()
+{
+	return AfxGetApp()->GetProfileInt(_T("Settings"), _T("RunAsAdmin"), 0) != 0;
+}
+
+// Mutexを解放
+void Ule4JisApp::ReleaseMutex()
+{
+	if (m_hMutex != NULL) {
+		::CloseHandle(m_hMutex);
+		m_hMutex = NULL;
 	}
 }
